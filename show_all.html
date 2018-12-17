@@ -23,7 +23,7 @@
         }
 
         #allmap {
-            height: 1200px;
+            height: 900px;
             width: 100%;
         }
 
@@ -35,8 +35,8 @@
 
 <body>
 
-    
-    <textarea name="all_geohash" id="all_geohash" cols="30" rows="10"></textarea>
+
+    <input type="text" name="" id="all_geohash" value="wx5jc, wx5n0">
    
     <input type="button" value="显示覆盖" id="search">
 
@@ -70,13 +70,15 @@
             });
             // var polygon = new BMap.Polygon(point_arr, { strokeColor: "blue", strokeWeight: 2, strokeOpacity: 0.5 });  //创建多边形
             // map.addOverlay(polygon);   //增加多边形  
+            
         }
 
         function calculate_geohash(){
             var all_geo_str = $("#all_geohash").val();
-            var all_arr = all_geo_str.split("\n");
+            var all_arr = all_geo_str.split(",");
             console.log(all_arr);
             var points = all_arr.map(geohash_str => {
+                geohash_str = $.trim(geohash_str);
                 var decoded_gps = Geohash.decode(geohash_str);
                 var cur_geo = {
                     longitude: decoded_gps.lon,
@@ -103,11 +105,14 @@
         function init(){
             // 百度地图API功能
             map = new BMap.Map("allmap");
-            map.centerAndZoom(new BMap.Point(116.404, 39.915), 15);
+            map.centerAndZoom(new BMap.Point(116.404, 39.915), 10);
             map.enableScrollWheelZoom();
+
+            bp_arr = new Array();
 
             all_p = calculate_geohash();
             add_ploygon(all_p);
+            set_zoom(bp_arr);
             
         }
 
