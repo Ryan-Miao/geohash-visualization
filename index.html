@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <title>geohash</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script src="./jquery.min.js"></script>
+    <script src="./latlon-geohash.js"></script>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=rTftA1rhmp7dbId0B2j3qTd2"></script>
+
+    <style type="text/css">
+        body,
+        html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            font-family: "微软雅黑";
+        }
+
+        #allmap {
+            height: 70%;
+            width: 100%;
+        }
+
+        #control {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <input type="text" value="116.40761,39.931286" placeholder="113.006373,28.191686" id="gps" />
+    <input type="text" value="3" placeholder="12" id="precision" />
+    <input type="button" value="获取geohash" id="search">
+
+
+    <div id="allmap"></div>
+
+
+    <script type="text/javascript">
+        
+        var map = new BMap.Map("allmap");
+
+
+        var bp_arr = new Array();
+        // 根据点的数组自动调整缩放级别
+        function set_zoom(bp_arr) {
+            var view = map.getViewport(eval(bp_arr));
+            var mapZoom = view.zoom;
+            var centerPoint = view.center;
+            map.centerAndZoom(centerPoint, mapZoom);
+        }
+
+        
+        
+
+        /**
+         * 四个角数组
+         * */
+        function add_ploygon(p_arr) {
+            var point_arr = p_arr.map(function (item, index) {
+                var bp = new BMap.Point(item.longitude, item.latitude);
+                bp_arr.push(bp);
+                var marker = new BMap.Marker(bp);  // 创建标注
+	            map.addOverlay(marker);              // 将标注添加到地图中
+                var label = new BMap.Label(item.geohash,{offset:new BMap.Size(20,-10)});
+                marker.setLabel(label);
+                return bp;
+            });
+            var polygon = new BMap.Polygon(point_arr, { strokeColor: "blue", strokeWeight: 2, strokeOpacity: 0.5 });  //创建多边形
+            map.addOverlay(polygon);   //增加多边形  
+        }
+
+
+
+
+        /**
+         * nine_geo  9个点
+         * */
+         function add_geohash(nine_geo) {
+            n_ne_e_o = [nine_geo.n, nine_geo.ne, nine_geo.e, nine_geo.o, nine_geo.n];
+            o_e_se_s = [nine_geo.o, nine_geo.e, nine_geo.se, nine_geo.s, nine_geo.o];
+            w_o_s_sw = [nine_geo.w, nine_geo.o, nine_geo.s, nine_geo.sw, nine_geo.w];
+            nw_n_o_w = [nine_geo.nw, nine_geo.n, nine_geo.o, nine_geo.w, nine_geo.nw];
+
+
+
+            bp_arr = new Array();
+            add_ploygon(n_ne_e_o);
+            add_ploygon(o_e_se_s);
+            add_ploygon(w_o_s_sw);
+            add_ploygon(nw_n_o_w);
+            set_zoom(bp_arr);
+        }
+
+
+        /**
+         * 获取9个点。
+         * */
+        function calculate_geohash() {
+            var gps = $("#gps").val();
+            var precision = $("#precision").val();
+            var gps_arr = gps.split(",");
+            var longitude = gps_arr[0];
+            var latitude = gps_arr[1];
+            console.log(longitude);
+            console.log(latitude);
+            var geohash_str = Geohash.encode(latitude, longitude, precision);
+            console.log("geohash is: ", geohash_str);
+
+            var decoded_gps = Geohash.decode(geohash_str);
+            var cur_geo = {
+                longitude: decoded_gps.lon,
+                latitude: decoded_gps.lat,
+                geohash: geohash_str,
+                p: 'o'
+            };
+            console.log("decoded: ", cur_geo);
+
+            var neighboursObj = Geohash.neighbours(geohash_str);
+
+            console.log("8个方向：", neighboursObj);
+            var neighboursArr = Object.keys(neighboursObj).map(function (n) {
+                var str = neighboursObj[n];
+                var lat_lon = Geohash.decode(str);
+                var i = {
+                    longitude: lat_lon.lon,
+                    latitude: lat_lon.lat,
+                    geohash: str,
+                    p: n
+                };
+                neighboursObj[n] = i;
+                return i;
+            });
+            neighboursArr.push(cur_geo);
+            neighboursObj.o = cur_geo;
+
+            console.log("9宫格arr：", neighboursArr);
+            console.log("9宫格json_obj：", neighboursObj);
+            return neighboursObj;
+        }
+    </script>
+
+    
+<script>
+
+        $(function () {
+            $("#search").click(init);
+
+        });
+
+        function init(){
+            // 百度地图API功能
+            map = new BMap.Map("allmap");
+            // map.centerAndZoom(new BMap.Point(116.404, 39.915), 15);
+            map.enableScrollWheelZoom();
+
+            //单击获取点击的经纬度
+            map.addEventListener("click",function(e){
+                console.log("拾取经纬度：", e.point)
+                $("#gps").val(e.point.lng + "," + e.point.lat);
+            });
+            nine = calculate_geohash();
+            add_geohash(nine);
+        }
+
+
+        init();
+
+    </script>
+
+</body>
+
+</html>
