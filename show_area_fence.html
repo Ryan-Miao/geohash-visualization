@@ -46,6 +46,15 @@
                 zoom: 14
             });
 
+            
+            var clickHandler = function(e) {
+                log.info('您在[ '+e.lnglat.getLng()+','+e.lnglat.getLat()+' ]的位置点击了地图！');
+                console.log('您在[ '+e.lnglat.getLng()+','+e.lnglat.getLat()+' ]的位置点击了地图！');
+            };
+
+            // 绑定事件
+            map.on('click', clickHandler);
+            
 
             polygon = new AMap.Polygon({
                 path: path,
@@ -61,6 +70,10 @@
             })
 
             polygon.setMap(map)
+            polygon.on('click', function (e) {
+                log.info('触发事件：多边形click，'+e.lnglat.getLng()+','+e.lnglat.getLat())
+                console.log(e.lnglat.getLng()+','+e.lnglat.getLat());
+            })
             // 缩放地图到合适的视野级别
             map.setFitView([polygon])
 
@@ -78,6 +91,8 @@
             polyEditor.on('removenode', function (event) {
                 log.info('触发事件：removenode')
             })
+
+            
 
             polyEditor.on('end', function (event) {
                 log.info('触发事件： end')
