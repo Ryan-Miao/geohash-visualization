@@ -2,7 +2,7 @@ geohash可视化显示
 ================
 
 经纬度获取9宫格覆盖：
-https://ryan-miao.github.io/geohash_tool/index.html
+https://ryan-miao.gitee.io/geohash_tool/
 
 ![](./geohash_tool.png)
 
